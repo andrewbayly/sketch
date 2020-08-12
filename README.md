@@ -2,6 +2,7 @@
 
 This repo contains a set of sketches I made using the tool and library p5.js
 
+
 ## grid
 
 Grid animation (click on the grid to change the squares)
@@ -21,6 +22,14 @@ Animation of Penrose Triangle
 Faces that jump around on the screen. Requires an iPhone with iOS 13.
 
 [LIVE DEMO](https://andrewbayly.github.io/sketch/faces/index.html "Live Demo")
+
+
+## sierpinski_zoom
+
+Animation of Sierpinski Carpet. 
+
+[LIVE DEMO](https://andrewbayly.github.io/sketch/sierpinski_zoom/index.html "Live Demo")
+
 
 
 
