@@ -31,6 +31,13 @@ Animation of Sierpinski Carpet.
 [LIVE DEMO](https://andrewbayly.github.io/sketch/sierpinski_zoom/index.html "Live Demo")
 
 
+## metaballs
+
+Metaballs, with shader code copied from https://www.openprocessing.org/sketch/838276. 
+
+[LIVE DEMO](https://andrewbayly.github.io/sketch/metaballs/index.html "Live Demo")
+
+
 
 
 
