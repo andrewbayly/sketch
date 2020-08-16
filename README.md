@@ -38,6 +38,13 @@ Metaballs, with shader code copied from https://www.openprocessing.org/sketch/83
 [LIVE DEMO](https://andrewbayly.github.io/sketch/metaballs/index.html "Live Demo")
 
 
+## space invaders
+
+retro arcade game, reproduced with p5.
+
+[LIVE DEMO](https://andrewbayly.github.io/sketch/space_invaders/index.html "Live Demo")
+
+
 
 
 
