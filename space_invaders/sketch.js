@@ -4,6 +4,8 @@
 
 var images = {}; 
 var fleet; 
+var base; 
+var bullet; 
 
 function preload(){ 
   loadImages(); 
@@ -19,15 +21,86 @@ function loadImages(){
 
 function setup() {
   createCanvas(2000, 1000); 
-  fleet = new Fleet(); 
+   
+  fleet = new Fleet();
+  base = new Base(); 
+  bullet = new Bullet();  
 }
 
 function draw() {
+  checkKeys(); 
+
   background(0); 
-  
+  fill(255);
+  stroke(255); 
   fleet.update(); 
   fleet.show(); 
+  base.show();
+  
+  bullet.update(); 
+  bullet.show();  
 }  
+
+function Base(){ 
+  this.posX = width / 2; 
+  this.posY = height - 100; 
+  this.width = 200; 
+  this.height = 50; 
+}
+
+
+
+Base.prototype.show = function(){ 
+  rect(this.posX - this.width / 2, this.posY - this.height / 2, this.width, this.height);
+  circle(this.posX, this.posY - this.height / 2, 30);  
+}
+
+function checkKeys() {
+  if(keyIsDown(LEFT_ARROW) && base.posX > 100 ) {
+    base.posX -= 5;
+  } 
+  
+  if(keyIsDown(RIGHT_ARROW) && base.posX < 1900) {
+    base.posX += 5;
+  }
+  
+  if(keyIsDown(32)) {
+    bullet.fire();
+  }
+  
+}
+
+function Bullet(){ 
+  this.fired = false; 
+  this.posX = 0; 
+  this.posY = 0; 
+  this.speedY = -10; 
+}
+
+Bullet.prototype.fire = function(){ 
+  if(this.fired)
+    return; 
+    
+  this.posX = base.posX; 
+  this.posY = base.posY; 
+  
+  this.fired = true;   
+}
+
+Bullet.prototype.update = function(){ 
+  if(this.fired){ 
+    this.posY += this.speedY; 
+    if(this.posY < 0)
+      this.fired = false;   
+  }
+}
+
+Bullet.prototype.show = function(){ 
+  if(bullet.fired){ 
+    strokeWeight(4); 
+    line(this.posX, this.posY - 50, this.posX, this.posY - 20);  
+  }
+}
 
 function Fleet(){
 
@@ -55,7 +128,32 @@ function Fleet(){
 }
 
 Fleet.prototype.update = function(){ 
-  this.frame = (this.frame + 1) % this.rate; 
+  this.frame = (this.frame + 1) % this.rate;
+  
+  //check for collision with bullet
+
+  if(bullet.fired){ 
+    var found = false; 
+    for(var i = 0; i < 5; i++){ 
+      for(var j = 0; j < 11; j++){
+        var ship = this.ships[i][j]; 
+        if(!ship.destroyed && !found){ 
+          if(  bullet.posX > ship.posX - ship.width / 2
+            && bullet.posX < ship.posX + ship.width / 2
+            && bullet.posY > ship.posY - ship.height / 2
+            && bullet.posY < ship.posY + ship.height / 2 ){ 
+           
+            ship.destroyed = true; 
+            bullet.fired = false;
+            found = true;  
+             
+          }
+        } 
+      }
+    }
+  }
+  
+//everything after this point only applies if this.frame is zero 
   if(this.frame != 0)
     return; 
 
@@ -78,7 +176,6 @@ Fleet.prototype.update = function(){
       } 
     }
   }
-  
   
   var left = 100; 
   var right = 1900 ; 
