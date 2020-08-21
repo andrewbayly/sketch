@@ -45,6 +45,13 @@ retro arcade game, reproduced with p5.
 [LIVE DEMO](https://andrewbayly.github.io/sketch/space_invaders/index.html "Live Demo")
 
 
+## Mandelbrot Zoom
+
+Click, drag & release to zoom into the fractal.
+
+[LIVE DEMO](https://andrewbayly.github.io/sketch/mandelbrot_zoom/index.html "Live Demo")
+
+
 
 
 
