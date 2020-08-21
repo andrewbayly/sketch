@@ -49,7 +49,7 @@ retro arcade game, reproduced with p5.
 
 Click, drag & release to zoom into the fractal.
 
-[LIVE DEMO](https://andrewbayly.github.io/sketch/mandelbrot_zoom/index.html "Live Demo")
+[LIVE DEMO](https://andrewbayly.github.io/sketch/mandelbrot_zoom/ "Live Demo")
 
 
 
