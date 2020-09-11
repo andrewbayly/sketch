@@ -3,6 +3,14 @@
 This repo contains a set of sketches I made using the tool and library p5.js
 
 
+## Cube
+
+Visualization of Rubik's Cube with solver. Hit M key to Mix up the faces. 
+Hit S key to solve the cube. 
+
+[LIVE DEMO](https://andrewbayly.github.io/sketch/cube/index.html "Live Demo")
+
+
 ## grid
 
 Grid animation (click on the grid to change the squares)
