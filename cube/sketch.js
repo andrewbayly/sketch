@@ -105,8 +105,81 @@ function setup() {
   
   solver = new Solver(); 
   
-//  move = new Move(0, 0, 1, -1); 
+  createUI(); 
 }
+
+function createUI(){ 
+  button = createButton('Scramble');
+  button.size(75,22);
+  button.position(20, 20);
+  button.mousePressed(function () {
+    mixUp();
+  });
+
+  button = createButton('Solve');
+  button.size(75,22);
+  button.position(110, 20);
+  button.mousePressed(function () {
+    solver.solve();
+  });
+
+
+  var posY = 70; 
+  var posX = 20; 
+  var spacingY = 30; 
+
+  createSideButton('Front(CC)', 'f', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Back(CC)', 'b', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Left(CC)', 'l', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Right(CC)', 'r', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Up(CC)', 'u', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Down(CC)', 'd', posX, posY); 
+  posY += spacingY; 
+
+  posY = 70; 
+  posX = 110; 
+
+  createSideButton('Front(C)', 'F', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Back(C)', 'B', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Left(C)', 'L', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Right(C)', 'R', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Up(C)', 'U', posX, posY); 
+  posY += spacingY; 
+  
+  createSideButton('Down(C)', 'D', posX, posY); 
+  posY += spacingY; 
+
+
+
+   
+}
+
+function createSideButton(label, move, posX, posY){ 
+  button = createButton(label);
+  button.size(75,22);
+  button.position(posX, posY);
+  button.mousePressed((function (m) {
+    makeMove(m); 
+  }).bind(null, move));
+} 
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
