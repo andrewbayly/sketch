@@ -2,8 +2,31 @@
 TODO: 
 1. rounded corners for cubie faces.
 2. don't show inner faces - show black instead. - DONE!
-3. create Move sequence which can execute a sequence of moves.
-4. solving the cube
+3. create Move sequence which can execute a sequence of moves. - DONE!
+4. solving the cube - DONE!
+
+- show the cube  DONE!
+- enable moves on the cube
+  - faces - DONE
+  - slices 
+
+Note: currently, makeMove will take the global value of slice, but we want to also 
+      allow that we specify the slice value to makeMove - some further thinking needed here.
+      
+use cases: 
+  1. push one of the buttons - this makes a move with the global value of slice
+  2. call the function with just 'f' - this makes the move with a slice value of 0
+  3. call the function with 'f2' - this splits out the slice value      
+
+- solve(3)
+  - fix makeMoves - DONE!
+  - solve needs to orient the faces first before it does anything else! - DONE!
+  - fix reverse - DONE!
+  
+- scramble(general case) - DONE!
+  - scramble needs to get the max slice and do random slices as well as faces
+  
+- solve(general case)
 
 **/
 
@@ -42,12 +65,26 @@ function sleep(ms) {
 }
 */
 
+
+/**
+ k is either 1 character or 2
+**/
 function makeMove(k){ 
-  if(k in moveMap){ 
-    moveQueue.unshift(moveMap[k]); 
-    //move = moveMap[k];
-    //move.start();
+  if(k.length == 1)
+    k += '0'; 
+
+  var m = k.charAt(0); 
+  var s = k.charAt(1) - 0; 
+
+  if(m in moveMap){ 
+    var mv = moveMap[m].copy(); 
+    mv.slice = s ;    
+    moveQueue.unshift(mv); 
   }
+}
+
+function selectMove(k){ 
+  makeMove( k + slice )
 }
 
 function mixUp(){ 
@@ -56,8 +93,10 @@ function mixUp(){
     keys.push(k);  
   }
   
+  var s = maxSlice() + 1 ; 
+    
   for(var i = 0; i < 30; i++){ 
-    makeMove(random(keys));   
+    makeMove(random(keys) + random(s));   
   }
 }
 
@@ -92,20 +131,32 @@ const colors = [
   
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
-  for(var x = -1; x <= 1; x++){ 
-    for(var y = -1; y <= 1; y++){ 
-      for(var z = -1; z <= 1; z++){ 
-        var qb = new Cubie(x, y, z); 
-        cubes.push(qb); 
-      }
-    }
-  }
+
+  createUI(); 
+  
+  initCube(); 
   
   easycam = createEasyCam();
   
   solver = new Solver(); 
+}
+
+function initCube() { 
   
-  createUI(); 
+  cubes = []; 
+  
+  var step = 2 / ( cubeSize - 1 ) 
+  
+  for(var x = -1; x <= 1; x += step ){ 
+    for(var y = -1; y <= 1; y += step){ 
+      for(var z = -1; z <= 1; z += step){ 
+        if( matchValue(abs(x), 1) || matchValue(abs(y), 1) || matchValue(abs(z), 1)) { 
+          var qb = new Cubie(x, y, z); 
+          cubes.push(qb); 
+        }
+      }
+    }
+  }
 }
 
 function createUI(){ 
@@ -166,10 +217,50 @@ function createUI(){
   
   createSideButton('Down(C)', 'D', posX, posY); 
   posY += spacingY; 
+  
+  //size selector
+  cubeSize = 3; 
+  selectSize = createSelect();
+  selectSize.position(200, 20);
+  selectSize.size(35, 22);
+  for(var s = 2; s <= 9; s++) { 
+    selectSize.option(s);
+  }  
+  selectSize.selected(cubeSize);
+  selectSize.changed(selectSizeEvent);
 
+  createSliceSelector(1); 
 
+}
 
-   
+function createSliceSelector(sliceMax){ 
+  //slice selector
+  slice = 0; 
+  selectSlice = createSelect();
+  selectSlice.position(200, 70);
+  selectSlice.size(35, 22);
+  for(var s = 0; s <= sliceMax; s++){ 
+    selectSlice.option(s);
+  }
+  selectSlice.selected(slice);
+  selectSlice.changed(selectSliceEvent);
+}
+
+function maxSlice(){ 
+  return floor((cubeSize - 1) / 2) ; 
+}
+
+function selectSizeEvent() { 
+  cubeSize = selectSize.value() - 0; 
+  createSliceSelector(maxSlice()); 
+  //alert('select size ' + size) 
+  initCube(); 
+  
+}
+
+function selectSliceEvent() { 
+  slice = selectSlice.value() - 0; 
+  //alert('select slice ' + slice) 
 }
 
 function createSideButton(label, move, posX, posY){ 
@@ -177,7 +268,7 @@ function createSideButton(label, move, posX, posY){
   button.size(75,22);
   button.position(posX, posY);
   button.mousePressed((function (m) {
-    makeMove(m); 
+    selectMove(m); 
   }).bind(null, move));
 } 
 
@@ -205,11 +296,11 @@ function draw() {
     push(); 
     
     if(move != null){ 
-      if(abs(cubes[i].pos.z) > 0 && cubes[i].pos.z == move.z) { 
+      if( matchValue(abs(move.z), 1) &&  matchValue(cubes[i].pos.z, level(move.z, move.slice) )) { 
         rotateZ(move.angle);    
-      } else if(abs(cubes[i].pos.x) > 0 && cubes[i].pos.x == move.x) { 
+      } else if(matchValue(abs(move.x), 1) &&  matchValue(cubes[i].pos.x, level(move.x, move.slice) )) { 
         rotateX(move.angle);    
-      } else if(abs(cubes[i].pos.y) > 0 && cubes[i].pos.y == move.y) { 
+      } else if(matchValue(abs(move.y), 1) &&  matchValue(cubes[i].pos.y, level(move.y, move.slice) )) { 
         rotateY(move.angle);    
       }
     }  
@@ -221,7 +312,7 @@ function draw() {
 
 function turnZ(level, dir){ 
   for(var i = 0; i < cubes.length; i++){ 
-    if(cubes[i].pos.z == level){
+    if(matchValue(cubes[i].pos.z, level)){
       cubes[i].turnZ(dir); 
     }
   }
@@ -229,7 +320,7 @@ function turnZ(level, dir){
 
 function turnY(level, dir){ 
   for(var i = 0; i < cubes.length; i++){ 
-    if(cubes[i].pos.y == level){
+    if(matchValue(cubes[i].pos.y, level)){
       cubes[i].turnY(dir); 
     }
   }
@@ -237,7 +328,7 @@ function turnY(level, dir){
 
 function turnX(level, dir){ 
   for(var i = 0; i < cubes.length; i++){ 
-    if(cubes[i].pos.x == level){
+    if(matchValue(cubes[i].pos.x, level)){
       cubes[i].turnX(dir); 
     }
   }
@@ -282,12 +373,17 @@ function Cubie(x, y, z){
     var pa = [p.x, p.y, p.z]; 
   
     for(var i = 0; i < na.length; i++){ 
-      if((na[i] != 0) && (na[i] != pa[i]))
+      if((na[i] != 0) && (! matchValue(na[i], pa[i])))
         return false; 
     }
     
     return true ; 
   }
+  
+}
+
+function matchValue(a, b) { 
+  return Math.abs(a - b) < 0.01; 
 }
 
 Cubie.prototype.getFaces = function(colors){ 
@@ -305,7 +401,7 @@ Cubie.prototype.getFaces = function(colors){
     }
     
     for(var j = 0; j < normals.length; j++){ 
-      if(normals[j].equals(face.normal))
+      if(normals[j].matchValue(face.normal))
         break; 
     }
     
@@ -343,9 +439,12 @@ Cubie.prototype.draw = function(){
   translate(this.pos);
   //translate(this.pos);
   fill(0); 
-  box(0.999);
   
-  for(var i = 0; i < this.faces.length; i++){ 
+  var f = 2 / ( cubeSize - 1 )  ; 
+  
+  box(0.999 * f);
+  
+  for(var i = 0; i < this.faces.length ; i++){ 
     this.faces[i].draw();  
   }
   
@@ -363,11 +462,13 @@ function Face(color, normal, i){
 }
 
 Face.prototype.draw = function(){ 
+  var f = 2 / ( cubeSize - 1 )  ; 
+
   push(); 
   fill(this.color); 
 
   var n = this.normal.copy();
-  n.mult(0.5); 
+  n.mult(0.5 * f); 
 
   translate(n); 
 
@@ -376,7 +477,8 @@ Face.prototype.draw = function(){
   else if(abs(this.normal.y) > 0.5)
     rotateX(HALF_PI);
   
-  square(-0.45, -0.45, 0.9); 
+  
+  square(-0.45 * f, -0.45 * f, 0.9 * f); 
   
   pop(); 
 }
@@ -397,6 +499,10 @@ Face.prototype.turnX = function(dir){
 Vector
 ******************************************************************************************/
 
+p5.Vector.prototype.matchValue = function(b){ 
+  return ( matchValue(this.x, b.x) && matchValue(this.y, b.y) &&  matchValue(this.z, b.z) )
+}
+
 p5.Vector.prototype.rotateZ = function(angle){ 
   var x = this.x; 
   var y = this.y;
@@ -404,8 +510,8 @@ p5.Vector.prototype.rotateZ = function(angle){
   var st = Math.sin(angle); 
   var ct = Math.cos(angle);
   
-  this.x = Math.round(x * ct - y * st) ; 
-  this.y = Math.round(x * st + y * ct) ; 
+  this.x = x * ct - y * st ; 
+  this.y = x * st + y * ct ; 
 }
 
 p5.Vector.prototype.rotateY = function(angle){ 
@@ -415,8 +521,8 @@ p5.Vector.prototype.rotateY = function(angle){
   var st = Math.sin(angle); 
   var ct = Math.cos(angle);
   
-  this.z = Math.round(z * ct - x * st) ; 
-  this.x = Math.round(z * st + x * ct) ; 
+  this.z = z * ct - x * st ; 
+  this.x = z * st + x * ct ; 
 }
 
 p5.Vector.prototype.rotateX = function(angle){ 
@@ -426,8 +532,8 @@ p5.Vector.prototype.rotateX = function(angle){
   var st = Math.sin(angle); 
   var ct = Math.cos(angle);
   
-  this.y = Math.round(y * ct - z * st) ; 
-  this.z = Math.round(y * st + z * ct) ; 
+  this.y = y * ct - z * st ; 
+  this.z = y * st + z * ct ; 
 }
 
 /******************************************************************************************
@@ -441,6 +547,12 @@ function Move(x, y, z, dir){
   this.dir = dir; 
   this.angle = 0; 
   this.animating = false; 
+  this.slice = 0; 
+}
+
+Move.prototype.copy = function(){ 
+  var m = new Move(this.x, this.y, this.z, this.dir); 
+  return m; 
 }
 
 Move.prototype.start = function(){ 
@@ -458,17 +570,25 @@ Move.prototype.update = function(){
       this.animating = false ; 
       
       if(abs(this.z) > 0){ 
-        turnZ(this.z, this.dir);
+        turnZ(level(this.z, this.slice), this.dir);
       } else if(abs(this.x) > 0){ 
-        turnX(this.x, this.dir);
+        turnX(level(this.x, this.slice), this.dir);
       } else if(abs(this.y) > 0){ 
-        turnY(this.y, this.dir);
+        turnY(level(this.y, this.slice), this.dir);
       }
       
       //var elapsed = new Date() - this.startTime ; 
       //console.log(elapsed); 
     }
   }
+}
+
+function level(axis, slice){ 
+  var step = (2 / (cubeSize - 1)) * slice ; 
+  
+  step = step * ( (axis == 1) ? -1 : 1 ) ; 
+    
+  return axis + step ;  
 }
 
 

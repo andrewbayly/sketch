@@ -2,6 +2,17 @@
 Solver
 ******************************************************************************************/
 
+/**
+
+moving to 4...
+
+1. reduce faces
+2. reduce edges
+3. check parity and fix
+4. solve 3x3
+
+**/
+
 function Solver(){ 
   this.solving = false; 
 }
@@ -31,7 +42,24 @@ Solver.prototype.find = function(colors){
 }  
   
 Solver.prototype.actionSteps = [ 
+
+  function(){
+    var pos = this.find('0'); //white
+    
+    var map = { 'U' : 'L1', 'F' : '', 'D' : 'l1', 'B' : 'l1l1', 'L' : 'u1', 'R' : 'U1' }  
+    
+    this.makeMoves( map[pos] );     
   
+  }, 
+
+  function(){
+    var pos = this.find('3'); //red
+    
+    var map = { 'U' : '', 'D' : 'f1f1', 'L' : 'F1', 'R' : 'f1' }  
+    
+    this.makeMoves( map[pos] );     
+ },  
+    
   /**
     steps 0-3 position the 4 edges with white faces correctly on the 
     white face.
@@ -529,14 +557,26 @@ Solver.prototype.flip = function(m){
 
 }
   
+  
 //returns the reverse of the sequence:
 Solver.prototype.reverse = function(m){ 
   //TODO:
   var result = '' ; 
-  for(var i = 0; i < m.length; i++){ 
-    result = this.flip(m.charAt(i)) + result ;  
-  }
   
+  while(m.length > 0){ 
+    var move = m.charAt(0); 
+    m = m.substring(1); 
+    
+    move = this.flip(move); 
+    
+    if(isDigit(m.charAt(0))) { 
+      move += m.charAt(0); 
+      m = m.substring(1); 
+    }
+    
+    result = move + result;  
+  }
+ 
   return result ; 
 }
 
@@ -727,7 +767,19 @@ Solver.prototype.step = function(){
 }
 
 Solver.prototype.makeMoves = function(moves){ 
-  for(var i = 0; i < moves.length; i++){ 
-    makeMove(moves.charAt(i));  
-  }
+  while(moves.length > 0){ 
+    var move = moves.charAt(0);
+    moves = moves.substring(1);  
+    
+    if(isDigit(moves.charAt(0))){ 
+      move += moves.charAt(0); 
+      moves = moves.substring(1); 
+    }
+    
+    makeMove(move); 
+  } 
+}
+
+function isDigit(k){ 
+  return !isNaN(parseInt(k)); 
 }
