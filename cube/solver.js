@@ -4,6 +4,8 @@ Solver
 
 /**
 
+1. support 2x2 and 3x3 and 4x4
+
 moving to 4...
 
 1. reduce faces
@@ -40,10 +42,84 @@ Solver.prototype.find = function(colors){
   
   return faces ; 
 }  
+
+/**
+find is fine for the 3x3, but when we move to 4x4, we have multiple matches for
+a specific set of colors, so - we have a new function findFaces which returns
+all the cubies that match the given color - let's try it and see if it works!
+
+what I really want is a structure like this: 
+
+face, x, y, for each cube. 
+
+Note that x, y are re-oriented based on the view of the cube
+
+
+**/
+
+Solver.prototype.findFaceCubies = function(color){ 
+  var qbs = []; 
+  for(var i = 0; i < cubes.length; i++){ 
+    qb = cubes[i]; 
+    if(qb.colors == color)
+      qbs.push(qb); 
+  }
+  
+  var result = []; 
+  
+  for(var i = 0; i < qbs.length; i++){ 
+    var qb = qbs[i]; 
+    var face = qb.getFaces(color)
+
+    var x = 0; 
+    var y = 0; 
+    
+    switch(face){ 
+      case 'F': 
+        x = qb.pos.x < 0 ? 0 : 1; 
+        y = qb.pos.y < 0 ? 0 : 1; 
+        break; 
+      case 'B': 
+        x = qb.pos.x < 0 ? 1 : 0; 
+        y = qb.pos.y < 0 ? 0 : 1; 
+        break; 
+      case 'L': 
+        x = qb.pos.z < 0 ? 0 : 1; 
+        y = qb.pos.y < 0 ? 0 : 1; 
+        break; 
+      case 'R': 
+        x = qb.pos.z < 0 ? 1 : 0; 
+        y = qb.pos.y < 0 ? 0 : 1; 
+        break; 
+      case 'U': 
+        x = qb.pos.x < 0 ? 0 : 1; 
+        y = qb.pos.z < 0 ? 0 : 1; 
+        break; 
+      case 'D': 
+        x = qb.pos.x < 0 ? 0 : 1; 
+        y = qb.pos.z < 0 ? 1 : 0; 
+        break; 
+    }
+    
+    var obj = {face: face, x:x, y:y}; 
+    result.push(obj);  
+       
+  }
+
+  return result; 
+}
+
   
 Solver.prototype.actionSteps = [ 
 
+/*--------------------------------------------------------------------------------
+preliminary steps for 3x3 orienting face cubies
+--------------------------------------------------------------------------------*/
+
   function(){
+    if(cubeSize != 3)
+      return; 
+  
     var pos = this.find('0'); //white
     
     var map = { 'U' : 'L1', 'F' : '', 'D' : 'l1', 'B' : 'l1l1', 'L' : 'u1', 'R' : 'U1' }  
@@ -53,6 +129,9 @@ Solver.prototype.actionSteps = [
   }, 
 
   function(){
+    if(cubeSize != 3)
+      return; 
+
     var pos = this.find('3'); //red
     
     var map = { 'U' : '', 'D' : 'f1f1', 'L' : 'F1', 'R' : 'f1' }  
@@ -60,12 +139,75 @@ Solver.prototype.actionSteps = [
     this.makeMoves( map[pos] );     
  },  
     
+/*--------------------------------------------------------------------------------
+these steps are for the 4x4
+--------------------------------------------------------------------------------*/
+
+  //first steps... put the 1st white face cubies on the white face in position 0,0
+  function(){ 
+    if(cubeSize != 4)
+      return; 
+  
+    var f = this.findFaceCubies('0'); 
+    
+    //alert(JSON.stringify(f)); 
+    
+    //lets choose the first cube, and position that!
+    var q = f[0]; 
+    
+    var t = [0, 1, 3, 2][q.y*2+q.x]; 
+    
+    var twist = this.flip(q.face); 
+    
+    for(var i = 0; i < t; i++)
+      this.makeMoves(twist); 
+      
+    var p = { F : '', B : 'u1u1', L : 'u1', R : 'U1', U : 'L1', D : 'l1'} ; 
+    
+    this.makeMoves(p[q.face]);   
+  }, 
+
+  //... now the second qb: 
+  function(){
+    if(cubeSize != 4)
+      return; 
+  
+    var f = this.findFaceCubies('0'); 
+
+    //at this point we can assume that f[0] is in the correct place, 
+    //so we pick f[1], and position that: 
+    
+    var q = f[1]; 
+    
+    //this is similar to the prior step, except for the case
+    //where this cube is already on the front.
+    
+  
+  }, 
+
+
+  //temporary fix to stop us from doing the 3x3 solve too soon
+  //and allow us to debug the 4x4 steps
+  function(){
+    if(cubeSize != 4)
+      return; 
+
+    this.end(); 
+  }, 
+
+/*--------------------------------------------------------------------------------
+remainder of steps for the 3x3 or the reduced 4x4 ( and 2x2 - corners only )
+--------------------------------------------------------------------------------*/
+
   /**
     steps 0-3 position the 4 edges with white faces correctly on the 
     white face.
   **/
 
   function(){
+    if(cubeSize == 2)
+      return; 
+
     var pos = this.find('03');  //white-red
     
     var map = {
@@ -81,6 +223,9 @@ Solver.prototype.actionSteps = [
   },
   
   function(){ 
+    if(cubeSize == 2)
+      return; 
+
     var pos = this.find('04');  //white-green
     
     var map = {
@@ -96,6 +241,9 @@ Solver.prototype.actionSteps = [
   },
   
   function(){
+    if(cubeSize == 2)
+      return; 
+
      var pos = this.find('02');  //white-orange
     
     var map = {
@@ -111,6 +259,9 @@ Solver.prototype.actionSteps = [
   },
   
   function(){ 
+    if(cubeSize == 2)
+      return; 
+
     var pos = this.find('05');  //white-blue
     
     var map = {
@@ -236,6 +387,9 @@ Solver.prototype.actionSteps = [
       - unwind
 ****/
   function(){ 
+    if(cubeSize == 2)
+      return; 
+  
     var qb = [ '13', '15', '12', '14' ]; 
     
     var pos = []; 
@@ -272,6 +426,9 @@ Solver.prototype.actionSteps = [
   edges: re-position 
 ****/
   function(){ 
+    if(cubeSize == 2)
+      return; 
+  
     var qb = [ '13', '15', '12', '14' ]; 
     
     var pos = []; 
@@ -445,6 +602,7 @@ re-orient corners
         break; 
       
     }
+
   }, 
   
 /**
@@ -496,6 +654,19 @@ re-orient corners
       "3131" : [ 0, 2, 2 ] 
     }
 
+    if(cubeSize == 2) {
+      for(var i = 0; i < 4; i++){ 
+        if(posOffset.join('') in offsetMap)
+          break; 
+      
+        this.makeMoves('b');
+       
+        for(var j = 0; j < 4; j++){ 
+          posOffset[j] = (posOffset[j] + 3) % 4 ;  
+        }
+      }
+    }
+
     //sanity check!
     if(!(posOffset.join('') in offsetMap)){ 
       console.log('new offsetMap found!'); 
@@ -504,7 +675,6 @@ re-orient corners
 
     var posOffsetJoin = posOffset.join('') ; 
     
-   
     var m0 = 'rfRfuFUFFUfu'; 
     var m1 = this.reverse(m0); 
     
@@ -515,7 +685,7 @@ re-orient corners
       var a = x[0]; 
       var b = x[1]; 
       var c = x[2];
-    
+
       for(var i = 0; i < a; i++){ 
         this.makeMoves('b');  
       }
@@ -531,8 +701,9 @@ re-orient corners
       for(var i = 0; i < c; i++){ 
         this.makeMoves('b');  
       }
-    }
 
+    }
+    
     if( posOffsetJoin == '2222' ){ 
       this.makeMoves(m0);  
       this.makeMoves('bb');  
@@ -543,6 +714,7 @@ re-orient corners
       this.makeMoves(m1);  
       this.makeMoves('B');  
     }
+
   }
   
 ];
@@ -692,6 +864,9 @@ Solver.prototype.row1_corner_step3 = function(qb){
 }
 
 Solver.prototype.row2_edge_step1 = function(qb){ 
+  if(cubeSize == 2)
+    return; 
+
   var pos = this.find(qb); 
     
   if(pos != this.correctPos(qb) && !pos.includes('B') ) {
@@ -712,6 +887,9 @@ Solver.prototype.row2_edge_step1 = function(qb){
 }
 
 Solver.prototype.row2_edge_step2 = function(qb){ 
+  if(cubeSize == 2)
+    return; 
+
 //    var qb = '25';     //orange-blue
   
     var turns = {'25':0, '35':1, '34':2, '24':3 }[qb]; 
@@ -751,6 +929,12 @@ Solver.prototype.row2_edge_step2 = function(qb){
       this.makeMoves(this.turn(seq[(x[1]+parity)%2], turns) ); 
       
     }
+}
+
+//end the sequence of steps
+//useful for debugging
+Solver.prototype.end = function(){ 
+  this.stepCount = this.actionSteps.length - 1; 
 }
 
 Solver.prototype.step = function(){ 
