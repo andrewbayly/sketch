@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <title>Hello</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Hello" />
+    <meta name="viewport" content="user-scalable=no, width=device-width, viewport-fit=cover" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        overflow: hidden;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.4s;
+      }
+      h1 {
+        font-size: 18vw;
+        margin: 0;
+        transition: color 0.4s;
+      }
+      p {
+        opacity: 0.6;
+        font-size: 5vw;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="hi">Hello, World!</h1>
+    <p>Tap anywhere</p>
+    <script>
+      const hi = document.getElementById('hi');
+      document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+      document.body.addEventListener('click', () => {
+        const hue = Math.floor(Math.random() * 360);
+        hi.style.color = `hsl(${hue}, 90%, 65%)`;
+        document.body.style.background = `hsl(${(hue + 180) % 360}, 40%, 12%)`;
+      });
+    </script>
+  </body>
+</html>
