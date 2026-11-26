@@ -12,8 +12,8 @@ let canvas = new DrawContext();
 
 // Set the line color
 
-canvas.setStrokeColor(new Color("#FF0000"));
-canvas.setFillColor(new Color("#FF0000"));
+canvas.setStrokeColor(new Color("#00FF00"));
+canvas.setFillColor(new Color("#00FF00"));
 
 
 
