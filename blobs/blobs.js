@@ -6,6 +6,8 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 let W = 0, H = 0, DPR = 1;
+// Play area: the screen minus the status bar, home bar and any notch.
+let LEFT = 0, TOP = 0, RIGHT = 0, BOTTOM = 0;
 const SUBSTEPS = 4;
 const ITERATIONS = 6;
 const N = 24;               // points per blob
@@ -129,13 +131,12 @@ function shapeConstraints(b) {
 }
 
 function walls(b) {
-  const pad = 2;
   const friction = 0.6;
   for (const p of b.pts) {
-    if (p.x < pad) { p.x = pad; p.py = p.y - (p.y - p.py) * friction; }
-    else if (p.x > W - pad) { p.x = W - pad; p.py = p.y - (p.y - p.py) * friction; }
-    if (p.y < pad) { p.y = pad; p.px = p.x - (p.x - p.px) * friction; }
-    else if (p.y > H - pad) { p.y = H - pad; p.px = p.x - (p.x - p.px) * friction; }
+    if (p.x < LEFT) { p.x = LEFT; p.py = p.y - (p.y - p.py) * friction; }
+    else if (p.x > RIGHT) { p.x = RIGHT; p.py = p.y - (p.y - p.py) * friction; }
+    if (p.y < TOP) { p.y = TOP; p.px = p.x - (p.x - p.px) * friction; }
+    else if (p.y > BOTTOM) { p.y = BOTTOM; p.px = p.x - (p.x - p.px) * friction; }
   }
 }
 
@@ -273,9 +274,22 @@ function draw() {
 
 function resize() {
   DPR = window.devicePixelRatio || 1;
-  W = window.innerWidth; H = window.innerHeight;
+  // Size from the canvas itself so physics and drawing always agree.
+  const rect = canvas.getBoundingClientRect();
+  W = rect.width; H = rect.height;
   canvas.width = Math.round(W * DPR);
   canvas.height = Math.round(H * DPR);
+  const cs = getComputedStyle(document.getElementById('safe'));
+  const margin = 4 + Math.max(2, baseRadius() * 0.06) / 2;   // keep the outline visible
+  LEFT = (parseFloat(cs.paddingLeft) || 0) + margin;
+  TOP = (parseFloat(cs.paddingTop) || 0) + margin;
+  RIGHT = W - (parseFloat(cs.paddingRight) || 0) - margin;
+  BOTTOM = H - (parseFloat(cs.paddingBottom) || 0) - margin;
+}
+
+function clampToArea(p) {
+  p.x = Math.min(RIGHT, Math.max(LEFT, p.x)); p.y = Math.min(BOTTOM, Math.max(TOP, p.y));
+  p.px = Math.min(RIGHT, Math.max(LEFT, p.px)); p.py = Math.min(BOTTOM, Math.max(TOP, p.py));
 }
 
 function baseRadius() { return Math.min(W, H) * 0.11; }
@@ -399,8 +413,8 @@ canvas.addEventListener('pointercancel', release);
 function applyDrag() {
   if (!drag) return;
   for (const h of drag.pts) {
-    const tx = Math.min(W, Math.max(0, drag.x + h.ox));
-    const ty = Math.min(H, Math.max(0, drag.y + h.oy));
+    const tx = Math.min(RIGHT, Math.max(LEFT, drag.x + h.ox));
+    const ty = Math.min(BOTTOM, Math.max(TOP, drag.y + h.oy));
     h.p.x = tx; h.p.y = ty; h.p.px = tx; h.p.py = ty;
   }
 }
@@ -421,10 +435,7 @@ function frame(t) {
 resize();
 window.addEventListener('resize', () => {
   resize();
-  for (const b of blobs) for (const p of b.pts) {
-    p.x = Math.min(W, p.x); p.y = Math.min(H, p.y);
-    p.px = Math.min(W, p.px); p.py = Math.min(H, p.py);
-  }
+  for (const b of blobs) for (const p of b.pts) clampToArea(p);
 });
 seed();
 requestAnimationFrame(frame);
