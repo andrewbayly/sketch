@@ -275,8 +275,14 @@ function draw() {
 function resize() {
   DPR = window.devicePixelRatio || 1;
   // Size from the canvas itself so physics and drawing always agree.
+  // iOS home-screen apps sometimes report a viewport taller than what's
+  // actually visible, so take the smallest of the available measurements.
   const rect = canvas.getBoundingClientRect();
-  W = rect.width; H = rect.height;
+  const vv = window.visualViewport;
+  W = Math.min(rect.width, window.innerWidth, vv ? vv.width : Infinity);
+  H = Math.min(rect.height, window.innerHeight,
+               document.documentElement.clientHeight || Infinity,
+               vv ? vv.height : Infinity);
   canvas.width = Math.round(W * DPR);
   canvas.height = Math.round(H * DPR);
   const cs = getComputedStyle(document.getElementById('safe'));
@@ -433,6 +439,7 @@ function frame(t) {
 }
 
 resize();
+if (window.visualViewport) window.visualViewport.addEventListener('resize', () => window.dispatchEvent(new Event('resize')));
 window.addEventListener('resize', () => {
   resize();
   for (const b of blobs) for (const p of b.pts) clampToArea(p);
